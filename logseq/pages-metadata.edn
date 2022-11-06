@@ -45,7 +45,7 @@
   :block/updated-at 1667733442948}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
-  :block/updated-at 1667733994220}
+  :block/updated-at 1667740482073}
  {:block/name "now",
   :block/created-at 1667012670178,
   :block/updated-at 1667012670178}
@@ -67,6 +67,12 @@
  {:block/name "二叉树",
   :block/created-at 1667119890827,
   :block/updated-at 1667733862901}
+ {:block/name "前缀和",
+  :block/created-at 1667740477136,
+  :block/updated-at 1667741125284}
+ {:block/name "数组",
+  :block/created-at 1667741125283,
+  :block/updated-at 1667741125283}
  {:block/name "算法秘籍",
   :block/created-at 1667014551966, 
   :block/updated-at 1667119890827}]
