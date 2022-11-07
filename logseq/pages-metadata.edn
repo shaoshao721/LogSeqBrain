@@ -49,6 +49,9 @@
  {:block/name "nov 7th, 2022",
   :block/created-at 1667760622422,
   :block/updated-at 1667760622422}
+ {:block/name "nov 8th, 2022",
+  :block/created-at 1667836802558,
+  :block/updated-at 1667839247927}
  {:block/name "now",
   :block/created-at 1667012670178,
   :block/updated-at 1667012670178}
@@ -67,15 +70,24 @@
  {:block/name "waiting",
   :block/created-at 1667012670178,
   :block/updated-at 1667012670178}
+ {:block/name "二分搜索",
+  :block/created-at 1667839247927,
+  :block/updated-at 1667840064247}
  {:block/name "二叉树",
   :block/created-at 1667119890827,
   :block/updated-at 1667742094823}
  {:block/name "前缀和",
   :block/created-at 1667740477136,
-  :block/updated-at 1667742187783}
+  :block/updated-at 1667838162149}
+ {:block/name "差分数组",
+  :block/created-at 1667838063353,
+  :block/updated-at 1667838435998}
  {:block/name "数组",
   :block/created-at 1667742187783,
   :block/updated-at 1667742187783}
+ {:block/name "滑动窗口",
+  :block/created-at 1667838458465,
+  :block/updated-at 1667839106176}
  {:block/name "算法秘籍",
   :block/created-at 1667014551966, 
   :block/updated-at 1667742059045}]
