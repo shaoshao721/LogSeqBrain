@@ -37,9 +37,6 @@
  {:block/name "favorites",
   :block/created-at 1667012670178,
   :block/updated-at 1667012670178}
- {:block/name "hard",
-  :block/created-at 1668008364512,
-  :block/updated-at 1668008364512}
  {:block/name "in-progress",
   :block/created-at 1667012670179,
   :block/updated-at 1667012670179}
@@ -52,21 +49,12 @@
  {:block/name "mysql45讲",
   :block/created-at 1667733433817,
   :block/updated-at 1667733442948}
- {:block/name "nov 10th, 2022",
-  :block/created-at 1668009602321,
-  :block/updated-at 1668009602321}
- {:block/name "nov 11th, 2022",
-  :block/created-at 1668096003030,
-  :block/updated-at 1668096003030}
  {:block/name "nov 12th, 2022",
   :block/created-at 1668183419695,
   :block/updated-at 1668224074988}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
   :block/updated-at 1667740482073}
- {:block/name "nov 7th, 2022",
-  :block/created-at 1667760622422,
-  :block/updated-at 1667760622422}
  {:block/name "nov 8th, 2022",
   :block/created-at 1667836802558,
   :block/updated-at 1667922953333}
