@@ -54,7 +54,7 @@
   :block/updated-at 1668258722483}
  {:block/name "lfu算法",
   :block/created-at 1668258564731,
-  :block/updated-at 1668259125580}
+  :block/updated-at 1668317131242}
  {:block/name "lru",
   :block/created-at 1668253617517,
   :block/updated-at 1668253617517}
@@ -69,7 +69,7 @@
   :block/updated-at 1668258564732}
  {:block/name "nov 13th, 2022",
   :block/created-at 1668268958936,
-  :block/updated-at 1668268958936}
+  :block/updated-at 1668317511186}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
   :block/updated-at 1667740482073}
@@ -127,6 +127,12 @@
  {:block/name "差分数组",
   :block/created-at 1667838063353,
   :block/updated-at 1667838435998}
+ {:block/name "常数时间内，删除",
+  :block/created-at 1668317511185,
+  :block/updated-at 1668317511185}
+ {:block/name "常数时间内，删除/查找数组中任意元素",
+  :block/created-at 1668317511185,
+  :block/updated-at 1668318852431}
  {:block/name "待办",
   :block/created-at 1668225009075,
   :block/updated-at 1668225045637}
