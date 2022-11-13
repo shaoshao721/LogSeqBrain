@@ -69,7 +69,7 @@
   :block/updated-at 1668258564732}
  {:block/name "nov 13th, 2022",
   :block/created-at 1668268958936,
-  :block/updated-at 1668325528382}
+  :block/updated-at 1668332429369}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
   :block/updated-at 1667740482073}
@@ -157,6 +157,9 @@
  {:block/name "算法秘籍",
   :block/created-at 1667014551966,
   :block/updated-at 1667742059045}
+ {:block/name "类加载与字节码技术",
+  :block/created-at 1668332429368,
+  :block/updated-at 1668332429368}
  {:block/name "递归",
   :block/created-at 1668224167533,
   :block/updated-at 1668224167533}
