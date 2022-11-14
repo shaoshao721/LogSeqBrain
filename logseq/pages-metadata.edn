@@ -75,7 +75,7 @@
   :block/updated-at 1668332429369}
  {:block/name "nov 14th, 2022",
   :block/created-at 1668356181434,
-  :block/updated-at 1668356181434}
+  :block/updated-at 1668439131550}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
   :block/updated-at 1667740482073}
@@ -112,6 +112,18 @@
  {:block/name "二叉树",
   :block/created-at 1667119890827,
   :block/updated-at 1667742094823}
+ {:block/name "二叉树-借助序列化解题",
+  :block/created-at 1668438113237,
+  :block/updated-at 1668438792375}
+ {:block/name "二叉树-常见的序列化方式",
+  :block/created-at 1668439131550,
+  :block/updated-at 1668441076171}
+ {:block/name "二叉树-细化每个节点需做的事情",
+  :block/created-at 1668436515564,
+  :block/updated-at 1668437104601}
+ {:block/name "二叉树-通过数组构造二叉树",
+  :block/created-at 1668437367553,
+  :block/updated-at 1668437969443}
  {:block/name "前缀和",
   :block/created-at 1667740477136,
   :block/updated-at 1667838162149}
@@ -145,6 +157,9 @@
  {:block/name "常数时间内，删除/查找数组中任意元素",
   :block/created-at 1668317511185,
   :block/updated-at 1668318852431}
+ {:block/name "序列化",
+  :block/created-at 1668438648127,
+  :block/updated-at 1668438648127}
  {:block/name "待办",
   :block/created-at 1668225009075,
   :block/updated-at 1668225045637}
