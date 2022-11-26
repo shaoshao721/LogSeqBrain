@@ -108,7 +108,7 @@
   :block/updated-at 1669457477494}
  {:block/name "nov 26th, 2022",
   :block/created-at 1669457458311,
-  :block/updated-at 1669457458311}
+  :block/updated-at 1669468327390}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
   :block/updated-at 1667740482073}
@@ -146,6 +146,15 @@
   :block/created-at 1667839247927,
   :block/updated-at 1667917953798}
  {:block/name "二叉搜索树",
+  :block/created-at 1669465623463,
+  :block/updated-at 1669465623463}
+ {:block/name "二叉搜索树(判断合法性、增、删、查)",
+  :block/created-at 1669465609076,
+  :block/updated-at 1669468289897}
+ {:block/name "二叉搜索树(如何计算所有合法bst)",
+  :block/created-at 1669468327389,
+  :block/updated-at 1669470136936}
+ {:block/name "二叉搜索树[中序遍历有序]",
   :block/created-at 1668785398072,
   :block/updated-at 1669464204273}
  {:block/name "二叉树",
