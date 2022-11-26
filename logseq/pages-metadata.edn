@@ -100,36 +100,15 @@
  {:block/name "nov 16th, 2022",
   :block/created-at 1668528004447,
   :block/updated-at 1668529496344}
- {:block/name "nov 17th, 2022",
-  :block/created-at 1668617267215,
-  :block/updated-at 1668617267215}
  {:block/name "nov 18th, 2022",
   :block/created-at 1668702407507,
   :block/updated-at 1668785398073}
  {:block/name "nov 19th, 2022",
   :block/created-at 1668787202596,
-  :block/updated-at 1668865591969}
- {:block/name "nov 20th, 2022",
-  :block/created-at 1668873969370,
-  :block/updated-at 1668873969370}
- {:block/name "nov 21st, 2022",
-  :block/created-at 1668970247702,
-  :block/updated-at 1668970247702}
- {:block/name "nov 22nd, 2022",
-  :block/created-at 1669047395568,
-  :block/updated-at 1669047395568}
- {:block/name "nov 23rd, 2022",
-  :block/created-at 1669135878169,
-  :block/updated-at 1669135878169}
- {:block/name "nov 24th, 2022",
-  :block/created-at 1669219504965,
-  :block/updated-at 1669219504965}
- {:block/name "nov 25th, 2022",
-  :block/created-at 1669308455670,
-  :block/updated-at 1669308455670}
+  :block/updated-at 1669457477494}
  {:block/name "nov 26th, 2022",
-  :block/created-at 1669400579774,
-  :block/updated-at 1669400579774}
+  :block/created-at 1669457458311,
+  :block/updated-at 1669457458311}
  {:block/name "nov 6th, 2022",
   :block/created-at 1667720898484,
   :block/updated-at 1667740482073}
