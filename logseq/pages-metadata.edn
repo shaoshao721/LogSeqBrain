@@ -147,10 +147,10 @@
   :block/updated-at 1667917953798}
  {:block/name "二叉搜索树",
   :block/created-at 1668785398072,
-  :block/updated-at 1668785460238}
+  :block/updated-at 1669464204273}
  {:block/name "二叉树",
   :block/created-at 1667119890827,
-  :block/updated-at 1668530045451}
+  :block/updated-at 1669463163157}
  {:block/name "二叉树-借助序列化解题",
   :block/created-at 1668438113237,
   :block/updated-at 1668438792375}
