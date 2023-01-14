@@ -41,4 +41,7 @@ tags:: seata
 			- tableRecords：一个表的信息
 			- row：一行的信息
 			- field：行中各个字段的信息
--
+			- tableRecords：
+				- ![image.png](../assets/image_1673690329096_0.png)
+				- tableMeta 表元数据
+					-
