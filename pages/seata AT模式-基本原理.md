@@ -56,4 +56,6 @@ tags:: seata
 					- ![image.png](../assets/image_1673691093931_0.png)
 					- 在datasourceproxy类中，有个定时任务，定时调用refresh方法，将所有的表元数据进行定时put。
 					- 查询都是查询fetchSchema方法
+						- ![image.png](../assets/image_1673691506592_0.png)
+						-
 -
