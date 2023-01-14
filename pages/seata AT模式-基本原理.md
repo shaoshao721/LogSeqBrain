@@ -64,4 +64,27 @@ tags:: seata
 				- 字段名称，字段是否为主键，字段类型（Types枚举定义），字段的值
 		- 回滚数据的时候，看后镜像中的数据是否和当前数据一致。如果一致，就可以安全的进行sql语句的回滚
 - 事务日志管理器
-	-
+	- ```
+	  public interface UndoLogManager {
+	  
+	      // 保存事务日志
+	      void flushUndoLogs(ConnectionProxy cp) throws SQLException;
+	  
+	      // 二阶段回滚处理
+	      void undo(DataSourceProxy dataSourceProxy, String xid, long branchId) throws TransactionException;
+	  
+	      // 二阶段回滚处理的删除事务日志
+	      void deleteUndoLog(String xid, long branchId, Connection conn) throws SQLException;
+	  
+	      // 二阶段提交处理的批量删除事务日志
+	      void batchDeleteUndoLog(Set<String> xids, Set<Long> branchIds, Connection conn) throws SQLException;
+	  
+	      // 根据创建时间删除事务日志
+	      int deleteUndoLogByLogCreated(Date logCreated, int limitRows, Connection conn) throws SQLException;
+	  
+	       // 资源存在undoLog表吗？如果没用AT模式的话，可能没有。如果用了AT模式的话每个库会有一张
+	      boolean hasUndoLogTable(Connection conn);
+	  }
+	  ```
+-
+-
