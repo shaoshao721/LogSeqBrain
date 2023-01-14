@@ -52,4 +52,6 @@ tags:: seata
 					- 先从缓存里拿，缓存里没有，就从数据库执行查询并生成表元数据
 					- 从缓存中获取
 					- ![image.png](../assets/image_1673690896925_0.png)
+					- ![image.png](../assets/image_1673690966682_0.png)
 					-
+-
