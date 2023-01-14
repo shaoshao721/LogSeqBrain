@@ -53,5 +53,6 @@ tags:: seata
 					- 从缓存中获取
 					- ![image.png](../assets/image_1673690896925_0.png)
 					- ![image.png](../assets/image_1673690966682_0.png)
-					-
+					- ![image.png](../assets/image_1673691093931_0.png)
+					- 在
 -
