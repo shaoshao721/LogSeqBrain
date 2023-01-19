@@ -29,6 +29,13 @@ tags:: seata
 				- 在DataSourceManager中缓存了数据源代理对象，并且调用父类的注册方法。
 				- 通过RPC客户端注册资源，将资源的资源组ID和资源ID发给事务协调器，注册当前资源。
 				- TC在收到资源注册请求后，会把客户端连接和组ID和资源ID建立对应关系
-				- 这样收到提交或回滚操作的时候，根据组ID+资源ID
-			-
+				- 这样收到提交或回滚操作的时候，根据组ID+资源ID，找到对应客户端连接并发送请求。保证了二阶段操作的高可用。
+	- 数据库连接代理
+		- 通过数据库代理来创建的
+		- 通过dataSourceProxy对象+Connection对象来构建ConnectionProxy
+		- Connection可以通过dataSource.getConnection来创建。
+		- 本地事务提交
+			- 用lockretryPolicy.execute()方法来做锁冲突重试机制
+			- 锁冲突重试机制
+				-
 	-
