@@ -48,11 +48,56 @@ tags:: seata
 					- 没有，普通的本地事务提交，该本地事务与分布式事务没关系。
 					- ![image.png](../assets/image_1674117118481_0.png)
 					- 分支事务提交
+						- ![image.png](../assets/image_1674122576462_0.png)
 						- 向TC注册分支事务
 							- ![image.png](../assets/image_1674121012110_0.png)
-							-
+							- ![image.png](../assets/image_1674121390377_0.png)
 						- 保存事务日志
+						- ```
+						      public void flushUndoLogs(ConnectionProxy cp) throws SQLException {
+						          // 获取连接上下文
+						          ConnectionContext connectionContext = cp.getContext();
+						          // 如果上下文里没有事务日志，则返回
+						          if (!connectionContext.hasUndoLog()) {
+						              return;
+						          }
+						  
+						          String xid = connectionContext.getXid();
+						          long branchId = connectionContext.getBranchId();
+						  
+						          BranchUndoLog branchUndoLog = new BranchUndoLog();
+						          branchUndoLog.setXid(xid);
+						          branchUndoLog.setBranchId(branchId);
+						          branchUndoLog.setSqlUndoLogs(connectionContext.getUndoItems());
+						  
+						          // 获取食物日志解释器
+						          UndoLogParser parser = UndoLogParserFactory.getInstance();
+						          // 将分支事务日志编码为字节数组，进行序列化。支持bzip2，gzip，lz4，zip等多种压缩算法，可以根据配置来选择
+						          byte[] undoLogContent = parser.encode(branchUndoLog);
+						  
+						          if (LOGGER.isDebugEnabled()) {
+						              LOGGER.debug("Flushing UNDO LOG: {}", new String(undoLogContent, Constants.DEFAULT_CHARSET));
+						          }
+						  
+						          CompressorType compressorType = CompressorType.NONE;
+						          // 如果需要压缩，则压缩字节数组
+						          if (needCompress(undoLogContent)) {
+						              compressorType = ROLLBACK_INFO_COMPRESS_TYPE;
+						              // 执行压缩算法
+						              undoLogContent = CompressorFactory.getCompressor(compressorType.getCode()).compress(undoLogContent);
+						          }
+						          // 插入事务日志，cp是connectionProxy
+						          insertUndoLogWithNormal(xid, branchId, buildContext(parser.getName(), compressorType), undoLogContent, cp.getTargetConnection());
+						      }
+						  ```
+							- 这个方法完成之后，本地事务提交
+							- 因为undolog的写入和业务sql在一个本地事务里提交，所以只要业务sql执行成功，undolog也一定写入了。保证了二阶段回滚幂等性。回滚操作必须得是查到了undolog才回滚，在完成的时候要删除undolog。
+							- 所以当收到了重复的回滚消息时，也不会对相同的数据多次回滚，因为第二次回滚的时候，对应的undolog就不在了
 						- 提交本地事务。插入undolog与业务sql语句在同一个本地事务中
+							- targetConnection.commit()方法
 						- RM上报分支事务状态
+							- 本地事务提交失败，分支事务的工作没有入库，无需对这个分支事务进行二阶段处理
+							- 调用branchReport方法，失败则重试。重试次数可以配置
+							- 也是个rpc调用
 						- 重置事务上下文
 	-
