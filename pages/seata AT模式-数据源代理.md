@@ -23,6 +23,12 @@ tags:: seata
 			- ![image.png](../assets/image_1674109487392_0.png)
 			- getBranchType获取分支事务的类型。
 			- getResourceManager是根据事务的类型获取资源管理器
+				- 在初始化所有资源管理器的时候，会加载所有resourceManager的子类。放到concurrentHashMap类型的map里，key是branchType，value是实现类
+				- AT模式下，返回的类实例是DataSourceManager。这种叫SPI机制来加载实现类
 			- registerResource方法来注册资源。
+				- 在DataSourceManager中缓存了数据源代理对象，并且调用父类的注册方法。
+				- 通过RPC客户端注册资源，将资源的资源组ID和资源ID发给事务协调器，注册当前资源。
+				- TC在收到资源注册请求后，会把客户端连接和组ID和资源ID建立对应关系
+				- 这样收到提交或回滚操作的时候，根据组ID+资源ID
 			-
 	-
