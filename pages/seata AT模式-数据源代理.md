@@ -11,4 +11,18 @@ tags:: seata
 		- 将本数据源代理注册到资源管理器resourceManager中
 	- 资源管理器
 		- AT模式中，resourceManager实现类是DataSourceManager
+		- resourceManager继承了resourceManagerInBound，ResourceManagerOutBound这两个接口
+		- 接口定义了四个方法
+			- 注册资源
+			- 取消注册资源
+			- 获取管理的所有资源
+			- 获取资源的类型
+			- inBound接口定义了对内的操作，接收事务协调器发来的请求，二阶段的分支事务提交请求，二阶段的分支事务回滚请求
+			- outBound接口定义了对外的操作，主动发到事务协调器的事务请求。包括分支事务的注册，上报数据等。seata的锁查询。
+		- 如何进行资源的注册
+			- ![image.png](../assets/image_1674109487392_0.png)
+			- getBranchType获取分支事务的类型。
+			- getResourceManager是根据事务的类型获取资源管理器
+			- registerResource方法来注册资源。
+			-
 	-
