@@ -109,5 +109,5 @@ tags:: seata
 						- 检查锁
 							- checkLock。检查seata全局锁，如果占用的话，抛出锁冲突异常，如果锁冲突可以选择重试或者失败返回。
 							- 构建globalLockQueryRequest对象，可以通过sendSyncRequest方法把对象发送到事务协调器中，等待响应。
-				-
+		- statementProxy与preparedStatementProxy
 	-
