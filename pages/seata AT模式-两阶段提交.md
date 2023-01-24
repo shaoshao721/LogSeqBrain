@@ -172,4 +172,64 @@ tags:: seata，at模式
 			  ```
 		- 在表里找到对应的branchId和xid查到undo_log表中的记录，把记录里rollback_info字段转成branchUndoLog对象，循环处理对象中的SQLUndoLog对象。
 		- 对于SQLUndoLog对象，使用Undo执行器进行回滚。所有对象回滚完之后，删除对应的undo_log，提交本地事务。
-		-
+		- undo执行器实现回滚
+			- AbstractUndoExecutor.excutedOn()方法
+			- ![image.png](../assets/image_1674546094363_0.png)
+			- 1. 脏写检查2.构建用来补偿的sql语句，创建一个preparedStatement对象3.执行undoPrepare方法将undolog中取到的值赋值给preparedStatement对象。4. 执行preparedStatement对象
+		- 脏写检查
+			- ```
+			  protected boolean dataValidationAndGoOn(Connection conn) throws SQLException {
+			          TableRecords beforeRecords = sqlUndoLog.getBeforeImage();
+			          TableRecords afterRecords = sqlUndoLog.getAfterImage();
+			          // 比较前后镜像
+			          Result<Boolean> beforeEqualsAfterResult = DataCompareUtils.isRecordsEquals(beforeRecords, afterRecords);
+			          if (beforeEqualsAfterResult.getResult()) {
+			              if (LOGGER.isInfoEnabled()) {
+			                  LOGGER.info("Stop rollback because there is no data change " +
+			                          "between the before data snapshot and the after data snapshot.");
+			              }
+			              // 如果一样的话，就不用回滚
+			              return false;
+			          }
+			  
+			          // 查询当前值
+			          TableRecords currentRecords = queryCurrentRecords(conn);
+			          // 比较当前值和后镜像是否相同
+			          Result<Boolean> afterEqualsCurrentResult = DataCompareUtils.isRecordsEquals(afterRecords, currentRecords);
+			          // 当前值和后镜像不同的时候，比较当前值和前镜像是否一样，如果一样，不回滚
+			          if (!afterEqualsCurrentResult.getResult()) {
+			              Result<Boolean> beforeEqualsCurrentResult = DataCompareUtils.isRecordsEquals(beforeRecords, currentRecords);
+			              if (beforeEqualsCurrentResult.getResult()) {
+			                  if (LOGGER.isInfoEnabled()) {
+			                      LOGGER.info("Stop rollback because there is no data change " +
+			                              "between the before data snapshot and the current data snapshot.");
+			                  }
+			                  return false;
+			              } else {
+			                  // 当前值和前后均不一样，出现脏写
+			                  if (LOGGER.isInfoEnabled()) {
+			                      if (StringUtils.isNotBlank(afterEqualsCurrentResult.getErrMsg())) {
+			                          LOGGER.info(afterEqualsCurrentResult.getErrMsg(), afterEqualsCurrentResult.getErrMsgParams());
+			                      }
+			                  }
+			                  if (LOGGER.isDebugEnabled()) {
+			                      LOGGER.debug("check dirty data failed, old and new data are not equal, " +
+			                              "tableName:[" + sqlUndoLog.getTableName() + "]," +
+			                              "oldRows:[" + JSON.toJSONString(afterRecords.getRows()) + "]," +
+			                              "newRows:[" + JSON.toJSONString(currentRecords.getRows()) + "].");
+			                  }
+			                  throw new SQLUndoDirtyException("Has dirty records when undo.");
+			              }
+			          }
+			          return true;
+			      }
+			  ```
+		- 构建回滚语句
+			- insert语句的回滚语句，以后镜像为数据来源，delete掉一阶段中插入的行
+				- ![image.png](../assets/image_1674546611278_0.png)
+				- ![image.png](../assets/image_1674546624688_0.png)
+			- delete语句的回滚
+				- 获取前镜像作为数据来源，把一阶段中删除的行重新插入进去
+			- update语句 的回滚
+				- 获取前镜像，回滚语句还是update，将一阶段中更新的行恢复回去
+			- 成功完成二阶段回滚之后，会对该分支在一阶段中加的seata全局锁进行放缩操作
