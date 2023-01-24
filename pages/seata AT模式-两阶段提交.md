@@ -11,4 +11,10 @@ tags:: seata，at模式
 			- 通过 UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType())获取undolog管理器
 			- 把二阶段上下文列表拆分成多个小列表，防止列表过大，造成拼接处的SQL语句过长。
 			- 对每个小列表进行处理，调用deleteUndoLog方法删除一批分支事务的日志
-			-
+			- ![image.png](../assets/image_1674529510327_0.png)
+			- batchDeleteUndoLog方法的具体实现
+				- 在这里这个paramsIndex，1就是对应第一个?，依次往后推
+				- ![image.png](../assets/image_1674529882209_0.png)
+			- toBatchDeleteUndoLogSql
+				- ![image.png](../assets/image_1674530156033_0.png)
+- 回滚处理
