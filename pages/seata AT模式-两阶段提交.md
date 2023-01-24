@@ -28,3 +28,148 @@ tags:: seata，at模式
 		- branchRollback()方法的具体实现
 			- ![image.png](../assets/image_1674536065027_0.png)
 		- undo方法实现逻辑
+			- ```
+			  public void undo(DataSourceProxy dataSourceProxy, String xid, long branchId) throws TransactionException {
+			          Connection conn = null;
+			          ResultSet rs = null;
+			          PreparedStatement selectPST = null;
+			          // autoCommit的当前状态
+			          boolean originalAutoCommit = true;
+			  
+			          for (; ; ) {
+			              try {
+			                  // 获取一个普通数据库连接
+			                  conn = dataSourceProxy.getPlainConnection();
+			                  // The entire undo process should run in a local transaction.
+			                  // 因为删除undo log和恢复业务数据的SQL要放在同一个本地事务里进行提交，这样才能保持一致性
+			                  // 所以如果本来设置的是自动提交的，要修改成手动
+			                  if (originalAutoCommit = conn.getAutoCommit()) {
+			                      conn.setAutoCommit(false);
+			                  }
+			  
+			                  // 生成查询unlog的preparedStatement,并且拼接参数，查询出来
+			                  selectPST = conn.prepareStatement(SELECT_UNDO_LOG_SQL);
+			                  selectPST.setLong(1, branchId);
+			                  selectPST.setString(2, xid);
+			                  rs = selectPST.executeQuery();
+			  
+			                  boolean exists = false;
+			                  while (rs.next()) {
+			                      exists = true;
+			                      // 可能服务器会发送多个回滚请求，所以设置了个状态，防止重复回滚
+			                      int state = rs.getInt(ClientTableColumnsName.UNDO_LOG_LOG_STATUS);
+			                      if (!canUndo(state)) {
+			                          if (LOGGER.isInfoEnabled()) {
+			                              LOGGER.info("xid {} branch {}, ignore {} undo_log", xid, branchId, state);
+			                          }
+			                          return;
+			                      }
+			  
+			                      String contextString = rs.getString(ClientTableColumnsName.UNDO_LOG_CONTEXT);
+			                      Map<String, String> context = parseContext(contextString);
+			                      byte[] rollbackInfo = getRollbackInfo(rs);
+			  
+			                      String serializer = context == null ? null : context.get(UndoLogConstants.SERIALIZER_KEY);
+			                      UndoLogParser parser = serializer == null ? UndoLogParserFactory.getInstance()
+			                          : UndoLogParserFactory.getInstance(serializer);
+			                      // 解码rollbackInfo字段
+			                      BranchUndoLog branchUndoLog = parser.decode(rollbackInfo);
+			  
+			                      try {
+			                          // 保持序列化器名称
+			                          setCurrentSerializer(parser.getName());
+			                          // 一条分支事务里可能有多个语句操作
+			                          List<SQLUndoLog> sqlUndoLogs = branchUndoLog.getSqlUndoLogs();
+			                          //从后往前回滚
+			                          if (sqlUndoLogs.size() > 1) {
+			                              Collections.reverse(sqlUndoLogs);
+			                          }
+			                          for (SQLUndoLog sqlUndoLog : sqlUndoLogs) {
+			                              // 获取表元数据
+			                              TableMeta tableMeta = TableMetaCacheFactory.getTableMetaCache(dataSourceProxy.getDbType()).getTableMeta(
+			                                  conn, sqlUndoLog.getTableName(), dataSourceProxy.getResourceId());
+			                              sqlUndoLog.setTableMeta(tableMeta);
+			                              // 获取回滚执行器
+			                              AbstractUndoExecutor undoExecutor = UndoExecutorFactory.getUndoExecutor(
+			                                  dataSourceProxy.getDbType(), sqlUndoLog);
+			                              // 进行回滚
+			                              undoExecutor.executeOn(conn);
+			                          }
+			                      } finally {
+			                          // remove serializer name？？？
+			                          removeCurrentSerializer();
+			                      }
+			                  }
+			  
+			                  //如果undo_log存在，则表示分支事务已完成第一阶段，
+			                  //我们可以直接回滚并清理undo_log
+			                  //否则表示分支事务中存在异常，
+			                  //导致undo_log不写入数据库。
+			                  //例如，业务处理超时，全局事务是启动器回滚。
+			                  //为了确保数据一致性，我们可以插入一个具有GlobalFinished状态的undo_log
+			                  //以防止其他程序的第一阶段的本地事务被正确提交。
+			                  if (exists) {
+			                      // 删除undo log
+			                      deleteUndoLog(xid, branchId, conn);
+			                      conn.commit();
+			                      if (LOGGER.isInfoEnabled()) {
+			                          LOGGER.info("xid {} branch {}, undo_log deleted with {}", xid, branchId,
+			                              State.GlobalFinished.name());
+			                      }
+			                  } else {
+			                      insertUndoLogWithGlobalFinished(xid, branchId, UndoLogParserFactory.getInstance(), conn);
+			                      conn.commit();
+			                      if (LOGGER.isInfoEnabled()) {
+			                          LOGGER.info("xid {} branch {}, undo_log added with {}", xid, branchId,
+			                              State.GlobalFinished.name());
+			                      }
+			                  }
+			  
+			                  return;
+			              } catch (SQLIntegrityConstraintViolationException e) {
+			                  // Possible undo_log has been inserted into the database by other processes, retrying rollback undo_log
+			                  if (LOGGER.isInfoEnabled()) {
+			                      LOGGER.info("xid {} branch {}, undo_log inserted, retry rollback", xid, branchId);
+			                  }
+			              } catch (Throwable e) {
+			                  if (conn != null) {
+			                      try {
+			                          conn.rollback();
+			                      } catch (SQLException rollbackEx) {
+			                          LOGGER.warn("Failed to close JDBC resource while undo ... ", rollbackEx);
+			                      }
+			                  }
+			                  if (e instanceof SQLUndoDirtyException) {
+			                      throw new BranchTransactionException(BranchRollbackFailed_Unretriable, String.format(
+			                          "Branch session rollback failed because of dirty undo log, please delete the relevant undolog after manually calibrating the data. xid = %s branchId = %s",
+			                          xid, branchId), e);
+			                  }
+			                  throw new BranchTransactionException(BranchRollbackFailed_Retriable,
+			                      String.format("Branch session rollback failed and try again later xid = %s branchId = %s %s", xid,
+			                          branchId, e.getMessage()),
+			                      e);
+			  
+			              } finally {
+			                  try {
+			                      if (rs != null) {
+			                          rs.close();
+			                      }
+			                      if (selectPST != null) {
+			                          selectPST.close();
+			                      }
+			                      if (conn != null) {
+			                          if (originalAutoCommit) {
+			                              conn.setAutoCommit(true);
+			                          }
+			                          conn.close();
+			                      }
+			                  } catch (SQLException closeEx) {
+			                      LOGGER.warn("Failed to close JDBC resource while undo ... ", closeEx);
+			                  }
+			              }
+			          }
+			      }
+			  ```
+		- 在表里找到对应的branchId和xid查到undo_log表中的记录，把记录里rollback_info字段转成branchUndoLog对象，循环处理对象中的SQLUndoLog对象。
+		- 对于SQLUndoLog对象，使用Undo执行器进行回滚。所有对象回滚完之后，删除对应的undo_log，提交本地事务。
+		-
