@@ -76,6 +76,79 @@ tags:: 事务协调器，seata
 		          });
 		      }
 		  ```
+		- clean和removeGlobalSession都是用来回滚的方法。但是clean是清除当前线程在特定全局事务中的本地回滚状态。当本地事务无法提交，seata将当前线程的回滚状态设置成true，表示需要回滚。调用了clean之后，允许线程参与其他事务。
+		- removeGlobalSession 全局事务回滚失败后将它从seata的重试队列中移除
+		- enable设置为false的时候且回滚重试过程超时时，涉及事务的资源将一直被锁定，直到事务成功回滚或seata的死锁检测和解决功能检测并解决到死锁
 		- 回滚全局事务方法
 			- ```
+			  public boolean doGlobalRollback(GlobalSession globalSession, boolean retrying) throws TransactionException {
+			          boolean success = true;
+			          // start rollback event
+			          MetricsPublisher.postSessionDoingEvent(globalSession, retrying);
+			  
+			          if (globalSession.isSaga()) {
+			              success = getCore(BranchType.SAGA).doGlobalRollback(globalSession, retrying);
+			          } else {
+			              // 按照分支事务反序遍历，对该全局事务的所有分支事务进行处理
+			              Boolean result = SessionHelper.forEach(globalSession.getReverseSortedBranches(), branchSession -> {
+			                  BranchStatus currentBranchStatus = branchSession.getStatus();
+			                  // 如果分支事务一阶段就失败了，本地事务还没有成功提交呢，那就直接删除分支事务
+			                  if (currentBranchStatus == BranchStatus.PhaseOne_Failed) {
+			                      SessionHelper.removeBranch(globalSession, branchSession, !retrying);
+			                      return CONTINUE;
+			                  }
+			                  try {
+			                      // 分支事务二阶段回滚
+			                      BranchStatus branchStatus = branchRollback(globalSession, branchSession);
+			                      if (isXaerNotaTimeout(globalSession, branchStatus)) {
+			                          LOGGER.info("Rollback branch XAER_NOTA retry timeout, xid = {} branchId = {}", globalSession.getXid(), branchSession.getBranchId());
+			                          branchStatus = BranchStatus.PhaseTwo_Rollbacked;
+			                      }
+			                      switch (branchStatus) {
+			                          // 如果分支事务回滚成功，删除该分支事务
+			                          case PhaseTwo_Rollbacked:
+			                              SessionHelper.removeBranch(globalSession, branchSession, !retrying);
+			                              LOGGER.info("Rollback branch transaction successfully, xid = {} branchId = {}", globalSession.getXid(), branchSession.getBranchId());
+			                              return CONTINUE;
+			                              // 如果回滚失败且标识为不可重试，那就不充实。需要人工干预
+			                          case PhaseTwo_RollbackFailed_Unretryable:
+			                              SessionHelper.endRollbackFailed(globalSession, retrying);
+			                              LOGGER.error("Rollback branch transaction fail and stop retry, xid = {} branchId = {}", globalSession.getXid(), branchSession.getBranchId());
+			                              return false;
+			                              // 回滚失败，重试
+			                          default:
+			                              LOGGER.error("Rollback branch transaction fail and will retry, xid = {} branchId = {}", globalSession.getXid(), branchSession.getBranchId());
+			                              if (!retrying) {
+			                                  globalSession.queueToRetryRollback();
+			                              }
+			                              return false;
+			                      }
+			                  } catch (Exception ex) {
+			                      StackTraceLogger.error(LOGGER, ex,
+			                          "Rollback branch transaction exception, xid = {} branchId = {} exception = {}",
+			                          new String[] {globalSession.getXid(), String.valueOf(branchSession.getBranchId()), ex.getMessage()});
+			                      if (!retrying) {
+			                          globalSession.queueToRetryRollback();
+			                      }
+			                      throw new TransactionException(ex);
+			                  }
+			              });
+			              // Return if the result is not null
+			              if (result != null) {
+			                  return result;
+			              }
+			          }
+			  
+			          // In db mode, lock and branch data residual problems may occur.
+			          // Therefore, execution needs to be delayed here and cannot be executed synchronously.
+			          if (success) {
+			              SessionHelper.endRollbacked(globalSession, retrying);
+			              LOGGER.info("Rollback global transaction successfully, xid = {}.", globalSession.getXid());
+			          }
+			          return success;
+			      }
 			  ```
+- 重试提交事务。全局事务状态为提交的事务，不断尝试推进他们的分支事务二阶段提交，失败就重试直到成功为止
+- 异步提交事务。
+- 事务超时检查，对所有全局事务进行超时检查，发现事务处于开始状态且已经超时，将全局事务状态修改为超时回滚状态，后续由重试回滚会话管理器对这个事务进行回滚
+- 批量删除资源侧事务日志。通知所有rm删除7天前的事务日志。正常的话，资源侧没有多余的事务日志，但是如果存在异常关机，则会存在rm没来得及删除二阶段提交状态的事务日志的情况。防止累及过多无用事务日志
