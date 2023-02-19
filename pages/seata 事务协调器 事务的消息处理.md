@@ -34,3 +34,50 @@ tags:: seata，事务协调器
 		  ```
 		- 已完成的情况，全局事务超时了，事务协调器的事务超时检查定时任务发现超时了，推进回滚完成，在完成后才收到全局事务提交请求
 		- 网络故障，重复发送了提交请求，其实之前那次提交请求就已经完成了
+		- ```
+		  public GlobalStatus commit(String xid) throws TransactionException {
+		          // 根据xid找到对应的全局事务会话
+		          GlobalSession globalSession = SessionHolder.findGlobalSession(xid);
+		          if (globalSession == null) {
+		              return GlobalStatus.Finished;
+		          }
+		          if (globalSession.isTimeout()) {
+		              LOGGER.info("TC detected timeout, xid = {}", globalSession.getXid());
+		              return GlobalStatus.TimeoutRollbacking;
+		          }
+		          // 添加会话生命周期监听器
+		          globalSession.addSessionLifecycleListener(SessionHolder.getRootSessionManager());
+		          boolean shouldCommit = SessionHolder.lockAndExecute(globalSession, () -> {
+		              if (globalSession.getStatus() == GlobalStatus.Begin) {
+		                  // 关闭全局事务会话，已经进入了提交环节，就不应该再注册新的分支事务了
+		                  globalSession.closeAndClean();
+		                  // 如果允许异步提交场景，则异步提交来提高性能
+		                  if (globalSession.canBeCommittedAsync()) {
+		                      globalSession.asyncCommit();
+		                      MetricsPublisher.postSessionDoneEvent(globalSession, GlobalStatus.Committed, false, false);
+		                      return false;
+		                  } else {
+		                      // 同步提交全局事务，将全局事务状态更改成提交中
+		                      globalSession.changeGlobalStatus(GlobalStatus.Committing);
+		                      return true;
+		                  }
+		              }
+		              return false;
+		          });
+		          // 如果现在提交
+		          if (shouldCommit) {
+		              boolean success = doGlobalCommit(globalSession, false);
+		              //提交成功，且还有剩余分支，可以异步提交，就替补提交
+		              if (success && globalSession.hasBranch() && globalSession.canBeCommittedAsync()) {
+		                  globalSession.asyncCommit();
+		                  return GlobalStatus.Committed;
+		              } else {
+		                  // 返回全局事务会话中保存的状态
+		                  return globalSession.getStatus();
+		              }
+		          } else {
+		              return globalSession.getStatus() == GlobalStatus.AsyncCommitting ? GlobalStatus.Committed : globalSession.getStatus();
+		          }
+		      }
+		  ```
+-
