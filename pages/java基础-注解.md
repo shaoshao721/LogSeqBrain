@@ -81,4 +81,15 @@ tags:: 注解，java
 		                              .getAnnotation(MyMethodAnnotation.class);
 		  ```
 - 深入理解注解
-	-
+	- java8新注解
+		- repeatable 说过的
+		- 类型注解
+			- ![image.png](../assets/image_1678605577220_0.png)
+			- 类型注解不会影响java的编译时间，加载时间以及运行时间。最后编译成的class文件不包含类型注解。
+			- 类型注解的作用：
+				- ```
+				  Collections.emptyList().add("One");
+				  int i=Integer.parseInt("hello");
+				  System.console().readLine();
+				  ```
+				- 这个代码虽然能编译通过，但是会有很多的运行时异常。类型注解就被用来做强类型检查。配合插件式check framework，在编译的时候就能检测出runtime error，提高代码质量。
