@@ -93,3 +93,9 @@ tags:: 注解，java
 				  System.console().readLine();
 				  ```
 				- 这个代码虽然能编译通过，但是会有很多的运行时异常。类型注解就被用来做强类型检查。配合插件式check framework，在编译的时候就能检测出runtime error，提高代码质量。
+		- 注解不支持继承。但是注解在编译后，编译器会自动继承annotation接口
+			- 注解上标注了@Inherited之后，他的子类就会自动拥有这个注解
+		- 实现原理
+		- 应用场景
+			- spring框架
+			- 自定义注解和AOP，通过切面实现解耦
