@@ -42,9 +42,44 @@ tags:: string，java
 	- 用+号的时候，内部是定义了个stringBuilder，用append方法进行处理的
 	- 特殊情况：
 		- 两个固定的字面量拼接，会进行常量折叠（两个字面量都在编译期可知），直接变成string s = "ab";
--
--
--
+- 字符串拼接的几种方式和区别
+	- 用+拼接字符串
+		- 不建议在循环里用+拼接字符串，因为每次循环都会new出来一个StringBuilder对象，然后进行append操作，最后通过toString方法返回String对象，造成内存资源浪费
+	- 用concat来拼接字符串
+		- 创建一个字符数组，长度是已有字符串和待拼接字符串的长度之和，把两个字符串的值复制到新的字符数组中，使用这个字符数组创建一个新的string对象并返回
+	- stringBuffer.append()
+		- 和StringBuilder差不多，但是他的append方法用synchronized来修饰过的
+		- 并发场景里要用stringbuffer
+	- stringBuilder.append()
+		- char[] value
+		- 字符数组中不一定所有位置都被使用，所以有count来记录数组中已经使用的字符个数
+	- StringUtils.join("a",",","b")
+		- 将数组或集合以某拼接符拼接到一起形成新的字符串！！！
+			- ```
+			  String []list  ={"Hollis","每日更新Java相关技术文章"};
+			  String result= StringUtils.join(list,",");
+			  System.out.println(result);
+			  //结果：Hollis,每日更新Java相关技术文章
+			  ```
+			- 其实内部也是StringBuilder
+	- 效率对比
+		- 用时对比`StringBuilder`<`StringBuffer`<`concat`<`+`<`StringUtils.join`
+- java8中的StringJoiner
+	- StringJoiner是java.util包中的一个类，用于构造一个由分隔符分隔的字符序列（可选），并且可以从提供的前缀开始并以提供的后缀结尾。虽然这也可以在StringBuilder类的帮助下在每个字符串之后附加分隔符，但是这个比较简单
+	- ```
+	  StringJoiner sj1 = new StringJoiner(":","[","]");
+	  sj1.add("Hollis").add("hollischuang").add("Java干货");
+	  System.out.println(sj1.toString());
+	  [Hollis:hollischuang:Java干货]
+	  ```
+	- 内部还是用StringBuilder实现的
+	- list.stream().collect(Collectors.joining(":"))
+	- 日常使用推荐
+		- 1、如果只是简单的字符串拼接，考虑直接使用"+"即可。
+		- 2、如果是在for循环中进行字符串拼接，考虑使用`StringBuilder`和`StringBuffer`。
+		- 3、如果是通过一个`List`进行字符串拼接，则考虑使用`StringJoiner`。
+- String.valueOf和Integer.toString的区别
+	- 没有区别，String.valueOf内部就是调用Integer.toString来实现的
 -
 -
 -
