@@ -31,4 +31,29 @@ tags:: string，java
 	- JDK7
 		- 会创建个新的数组
 		- ![string-substring-jdk7](http://www.programcreek.com/wp-content/uploads/2013/09/string-substring-jdk71-650x389.jpeg)
-		-
+- replaceFirst，replaceAll，replace区别
+	- replace(CharSequence target, CharSequence replacement) ，用replacement替换所有的target，两个参数都是字符串。
+	- replaceAll(String regex, String replacement) ，用replacement替换所有的regex匹配项，regex很明显是个正则表达式，replacement是字符串。
+	- replaceFirst(String regex, String replacement) ，基本和replaceAll相同，区别是只替换第一个匹配项。
+- string对“+”的重载
+	- java不支持运算符重载，其实只是java提供的语法糖
+	- 重载：对已有的运算符重新进行定义，赋予另外一种功能
+	- 语法糖: **指计算机语言中添加的某种语法，这种语法对语言的功能没有影响，但是更方便程序员使用。语法糖让程序更加简洁，有更高的可读性。**
+	- 用+号的时候，内部是定义了个stringBuilder，用append方法进行处理的
+	- 特殊情况：
+		- 两个固定的字面量拼接，会进行常量折叠（两个字面量都在编译期可知），直接变成string s = "ab";
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+- TODO 写26岁感言
+- TODO 去倒水喝，1升
+- TODO 列出来三四月份的学习计划
+- TODO 换被套
+- f
