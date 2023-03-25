@@ -80,15 +80,43 @@ tags:: string，java
 		- 3、如果是通过一个`List`进行字符串拼接，则考虑使用`StringJoiner`。
 - String.valueOf和Integer.toString的区别
 	- 没有区别，String.valueOf内部就是调用Integer.toString来实现的
--
--
--
+- swith对String的支持
+	- 目前支持，byte，short，int，char，string
+	- 对整型支持的实现
+		- 对int的判断是直接比较整数的值
+	- 对字符型支持的实现
+		- 对char类型比较，实际上比较的ascii码，会把char型变量转换成对应的int型变量
+	- 对字符串支持的实现
+		- 通过equals和hashCode方法来实现的
+		- switch只能用整型，int
+		- 因为hashCode也可能会发生哈希碰撞，还需要用equals再进行安全检查
+- 字符串池
+	- ```
+	  String str = "Hollis"; 字面量
+	  String str = new String("Hollis")；
+	  ```
+	- 当通过字面量方式创建字符串对象的时候，JVM会先对字符串进行检查，如果字符串常量池里存在相同内容的字符串对象的引用，就把引用返回
+	- 否则就创建新的字符串对象，将引用放到字符串常量池，返回该引用
+	- 常量池的位置
+		- 1.7以前，是在永久代
+		- 7的时候，从永久代移出，暂时放在堆内存里
+		- 8的时候，从堆内存里放到永久代
+- Class常量池
+	- 三种常量池
+		- 字符串常量池
+		- Class常量池
+		- 运行时常量池
+	- 什么是Class文件
+		- **如何使用16进制打开class文件：使用 **`vim test.class`** ，然后在交互模式下，输入**`:%!xxd`** 即可。**
+		- 字节码文件，Class文件里包含了java虚拟机指令集和符号表一集若干其他辅助信息
+		- 版本号后面，就是Class常量池入口了
+		- Class文件中除了类的版本，字段，方法，接口等描述信息外，还有一项信息就是常量池，用来存放编译器生成的各种字面量和符号引用
 -
 -
 -
 -
 - TODO 写26岁感言
-- TODO 去倒水喝，1升
 - TODO 列出来三四月份的学习计划
-- TODO 换被套
-- f
+- TODO 换枕头套
+- TODO 护肤化妆
+-
