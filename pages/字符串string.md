@@ -18,3 +18,17 @@ tags:: string，java
 - JDK6和JDK7中substring的原理及区别
 	- substring() substring(int beginIndex, int endIndex)
 	- 截取字符串返回beginIndex，endIndex-1范围内的内容
+	- JDK6
+		- string是字符数组实现。jdk6里，char value[]，int offset, int count.存储真正的字符数组，数组第一个位置索引，字符串中包含的字符个数
+		- 调用substring方法的时候，会创建一个新的string对象，string的值仍然指向堆中的同一个字符数组，改变count和offset的值
+		- ![string-substring-jdk6](http://www.programcreek.com/wp-content/uploads/2013/09/string-substring-jdk6-650x389.jpeg)
+		- 问题
+			- 有一个很长很长的字符串，切割了之后只要很短的一段。但是因为这边还在引用堆里的那个字符数组，所以这个长字符串一直没法回收，导致及内存泄露
+			- java6用这种方式解决，生成新的字符串引用他
+			- ```
+			  x = x.substring(x, y) + ""
+			  ```
+	- JDK7
+		- 会创建个新的数组
+		- ![string-substring-jdk7](http://www.programcreek.com/wp-content/uploads/2013/09/string-substring-jdk71-650x389.jpeg)
+		-
