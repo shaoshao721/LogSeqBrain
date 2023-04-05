@@ -1,39 +1,72 @@
 tags:: spring
 
 - BeanDefinition
-- BeanDefinition表示Bean定义，BeanDefinition中存在很多属性用来描述一个Bean的特点。比如：
-- class，表示Bean类型 scope，表示Bean作用域，单例或原型等 lazyInit：表示Bean是否是懒加载 initMethodName：表示Bean初始化时要执行的方法 destroyMethodName：表示Bean销毁时要执行的方法 还有很多...
-- 在Spring中，我们经常会通过以下几种方式来定义Bean：
-- 1. <bean/>
-- 2. @Bean
-- 3. @Component(@Service,@Controller)
-- 这些，我们可以称之申明式定义Bean。
-- 我们还可以编程式定义Bean，那就是直接通过BeanDefinition，比如：
-- AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-- // 生成一个BeanDefinition对象，并设置= beanClass 为User.class ，并注册到ApplicationContext 中 AbstractBeanDefinition beanDefinition
-- BeanDefinitionBuilder.genericBeanDefinition().getBeanDefinition(); beanDefinition.setBeanClass(User.class); context.registerBeanDefinition("user", beanDefinition);
-- System.out.println(context.getBean("user"));
-- 我们还可以通过BeanDefinition设置一个Bean的其他属性 beanDefinition.setScope("prototype"); // ); 设置作用域 beanDefinition.setInitMethodName("init" // 设置初始化方法 beanDefinition.setLazyInit(true); // 设置懒加载
-- 和申明式事务、编程式事务类似，通过<bean/>，@Bean，@Component等申明式方式所定义的 Bean，最终都会被Spring解析为对应的BeanDefinition对象，并放入Spring容器中。
-- BeanDefinitionReader
-- 接下来，我们来介绍几种在Spring源码中所提供的BeanDefinition读取器 （BeanDefinitionReader），这些BeanDefinitionReader在我们使用Spring时用得少，但在Spring 源码中用得多，相当于Spring源码的基础设施。
-- AnnotatedBeanDefinitionReader
-- 可以直接把某个类转换为BeanDefinition，并且会解析该类上的注解，比如
-- AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-- AnnotatedBeanDefinitionReader annotatedBeanDefinitionReader = new AnnotatedBeanDefinitionReader(context);
-- // 将User.class 解析为BeanDefinition  annotatedBeanDefinitionReader.register(User.class);
-- System.out.println(context.getBean("user"));
-- 注意：它能解析的注解是：@Conditional，@Scope、@Lazy、@Primary、@DependsOn、 @Role、@Description
-- XmlBeanDefinitionReader
-- 可以解析<bean/>标签
-- AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-- XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(context); int i = xmlBeanDefinitionReader.loadBeanDefinitions("spring.xml");
-- System.out.println(context.getBean("user"));
-- ClassPathBeanDefinitionScanner ClassPathBeanDefinitionScanner
-- ClassPathBeanDefinitionScanner是扫描器，但是它的作用和BeanDefinitionReader类似，它可以 进行扫描，扫描某个包路径，对扫描到的类进行解析，比如，扫描到的类上如果存在@Component 注解，那么就会把这个类解析为一个BeanDefinition，比如：
-- AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(); context.refresh(); ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context); scanner.scan("com.zhouyu"); System.out.println(context.getBean("userService"));
+	- BeanDefinition表示Bean定义，BeanDefinition中存在很多属性用来描述一个Bean的特点。
+	- 用xml来定义bean，@bean来声明bean，在一个类上面加component注解，都会生成一个BeanDefinition
+	- 是一个接口，有很多很多类来实现这个接口。
+	- 具有的属性
+		- class，表示Bean类型
+		- scope，表示Bean作用域，单例或原型等
+		- lazyInit：表示Bean是否是懒加载
+		- initMethodName：表示Bean初始化时要执行的方法
+		- destroyMethodName：表示Bean销毁时要执行的方法
+		- 还有很多...
+	- 在Spring中，我们经常会通过以下几种方式来定义Bean：（
+		- 申明式定义Bean）
+			- 1. <bean/>
+			  2. @Bean
+			  3. @Component(@Service,@Controller)
+		- 编程式定义Bean，那就是直接通过BeanDefinition，比如：
+			- ```
+			  AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);  
+			  // 生成一个BeanDefinition对象，并设置= beanClass 为User.class ，并注册到ApplicationContext 中 AbstractBeanDefinition beanDefinition  
+			  BeanDefinitionBuilder.genericBeanDefinition().getBeanDefinition(); 
+			  beanDefinition.setBeanClass(User.class); 
+			  context.registerBeanDefinition("user", beanDefinition); // 第一个参数是beanName，后一个参数是bean定义
+			  System.out.println(context.getBean("user"));  
+			  ```
+			- 我们还可以通过BeanDefinition设置一个Bean的其他属性
+				- beanDefinition.setScope("prototype"); // ); 设置作用域
+				- beanDefinition.setInitMethodName("init" // 设置初始化方法
+				- beanDefinition.setLazyInit(true); // 设置懒加载
+		- 和申明式事务、编程式事务类似，通过<bean/>，@Bean，@Component等申明式方式所定义的 Bean，最终都会被Spring解析为对应的BeanDefinition对象，并放入Spring容器中。
+-
+- BeanDefinitionReader BeanDefinition读取器
+	- AnnotatedBeanDefinitionReader(解析注解)
+		- 它能解析的注解是：@Conditional，@Scope、@Lazy、@Primary、@DependsOn、 @Role、@Description
+		- 可以直接把某个类转换为BeanDefinition，并且会解析该类上的注解，比如
+		- ```
+		  // 先创建一个spring容器
+		  AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);  
+		  // 初始化的时候，spring容器作为它的入参，因为最后解析完了之后，要放到spring容器里面去
+		  AnnotatedBeanDefinitionReader annotatedBeanDefinitionReader = new AnnotatedBeanDefinitionReader(context);  
+		  // 将User.class 解析为BeanDefinition  
+		  annotatedBeanDefinitionReader.register(User.class);  
+		  System.out.println(context.getBean("user"));  
+		  // 在这种情况下，User这个类没有定义@Component啥的，但是因为注册了，所以也会变成一个bean
+		  ```
+	- XmlBeanDefinitionReader
+		- 可以解析<bean/>标签
+		- ```
+		  AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);  
+		  XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(context); 
+		  int i = xmlBeanDefinitionReader.loadBeanDefinitions("spring.xml");  
+		  System.out.println(context.getBean("user"));  
+		  ```
+-
+- ClassPathBeanDefinitionScanner
+	- ClassPathBeanDefinitionScanner是扫描器，但是它的作用和BeanDefinitionReader类似，它可以 进行扫描，扫描某个包路径，对扫描到的类进行解析
+	- 比如，扫描到的类上如果存在@Component 注解，那么就会把这个类解析为一个BeanDefinition，比如：
+	- ```
+	  AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(); 
+	  context.refresh(); 
+	  ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context); 
+	  scanner.scan("com.zhouyu"); 
+	  System.out.println(context.getBean("userService"));
+	  ```
+-
 - BeanFactory
-- BeanFactory表示Bean工厂，所以很明显，BeanFactory会负责创建Bean，并且提供获取Bean的 API。
+	- BeanFactory表示Bean工厂，所以很明显，BeanFactory会负责创建Bean，并且提供获取Bean的 API。
 - 而ApplicationContext是BeanFactory的一种，在Spring源码中，是这么定义的：
 - public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory, MessageSource, ApplicationEventPublisher, ResourcePatternResolver {
 - ...
