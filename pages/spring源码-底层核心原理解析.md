@@ -82,3 +82,28 @@ tags:: spring
 		  }
 		  ```
 		- 当实际执行test的时候，又变成了实际的UserService的对象来执行，他的otherService是有值的
+		- ![image.png](../assets/image_1680679514951_0.png)
+		- 切面的使用
+		- 如何判断这个类对象有AOP要生成代理对象呢？
+			- 切面也是个bean，特殊的bean
+			- 找出所有的切面bean，@Aspect注解的bean
+			- 遍历每个切面bean，找出来注解，注解里的表达式和我当前创建的userService类匹配不
+			- 如果匹配了，把方法缓存起来，key就是userService，执行的时候，就直接全部找出来，执行
+- spring的事务
+	- 在AppConfig里没有加@Configuration注解，导致@Transactional注解没有生效
+		- ![image.png](../assets/image_1680681246251_0.png)
+		- 因为在这个代码里，如果不加@Configuration注解，那jdbcTemplate里的datasource和transactionManager里的dataSource就不是一个dataSource
+		- 在实际使用过程中，默认事务管理器创建一个datasource，和实际调用的时候，是用jdbcTemplate生成的datasource，他俩不一样，那执行的时候，是默认自动提交的，就不生效了
+		- 在添加了@Configuration注解的时候，会生成个AppConfig的代理对象，当执行dataSource的时候，去看spring容器里有没有dataSource的bean，有的话直接返回，就不会生成两个了
+	- 过程
+		- 1. 判断是否加了@Transactional注解
+		  2. 创建一个数据库连接conn（事务管理器来做的
+		  ![image.png](../assets/image_1680680381628_0.png)
+		- 3.conn.autocommit = false  默认是true，每执行一个sql，就会自动提交，就不会回滚了，所以要手动置为false  当执行完，成功了，就调用conn.commit()。失败了，就调用conn.rollback()
+	- 事务的传播级别
+		- propagation.never 进入方法的时候，已经带着一个事务了，那就会抛出异常
+		- ![image.png](../assets/image_1680680677579_0.png)
+		- 但是这种情况下，不会报错，因为在执行a的时候，是普通对象在执行，事务会失效。要保证是代理对象来调用
+			- 处理方式
+				- 注入一个别的bean，在这个bean里的方法上加上@Transactional注解，因为加了这个，在生成的时候，也是这个bean的代理对象，然后在方法里，bean.a()的时候，也是代理对象去调用，就会生效
+				- 自己把自己注入进来，也可以实现这个效果
