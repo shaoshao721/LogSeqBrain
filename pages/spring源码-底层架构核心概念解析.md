@@ -166,15 +166,19 @@ tags:: spring
 	- 获取运行时环境 获取运行时环境
 	- ```
 	  AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);  
+	  // 操作系统的一些环境变量
 	  Map<String, Object> systemEnvironment = context.getEnvironment().getSystemEnvironment();
 	  System.out.println(systemEnvironment);  
 	  System.out.println("=======");  
+	  // 指定的一些系统属性，——d的方式
 	  Map<String, Object> systemProperties = context.getEnvironment().getSystemProperties(); 
 	  System.out.println(systemProperties);  
 	  System.out.println("=======");  
+	  // 通过propertysource注解指定的一些环境变量，上面那俩也有
 	  MutablePropertySources propertySources = context.getEnvironment().getPropertySources(); 
 	  System.out.println(propertySources);  
 	  System.out.println("=======");  
+	  // 获取具体的一些property
 	  System.out.println(context.getEnvironment().getProperty("NO_PROXY")); 
 	  System.out.println(context.getEnvironment().getProperty("sun.jnu.encoding")); 
 	  System.out.println(context.getEnvironment().getProperty("zhouyu"));  
@@ -182,145 +186,270 @@ tags:: spring
 	- 注意，可以利用@PropertySource("classpath:spring.properties")来使得某个properties文件中的参数添加到运行时环境中
 -
 - 事件发布
-- 先定义一个事件监听器
-- @Bean public ApplicationListener applicationListener() {
-- return new ApplicationListener() { @Override public void onApplicationEvent(ApplicationEvent event) { System.out.println("接收到了一个事件"); } };
-- }
-- 然后发布一个事件：
-- context.publishEvent("kkk");
+	- 先定义一个事件监听器
+		- ```
+		  @Bean 
+		  public ApplicationListener applicationListener() {
+		  	return new ApplicationListener() { 
+		                 @Override 
+		                 public void onApplicationEvent(ApplicationEvent event) { 
+		                            System.out.println("接收到了一个事件"); 
+		                  } 
+		      };
+		  }
+		  ```
+	- 然后发布一个事件：
+		- ```
+		  context.publishEvent("kkk");
+		  ```
+	- 这样当运行到发布时间之后，时间监听器就会监听到这个事件，然后就会触发它里面的这个方法，打印出“接收到了一个事件”
+-
 - 类型转化 类型转化
-- 在Spring源码中，有可能需要把String转成其他类型，所以在Spring源码中提供了一些技术来更方便 的做对象的类型转化，关于类型转化的应用场景， 后续看源码的过程中会遇到很多。
-- PropertyEditor
-- 这其实是JDK中提供的类型转化工具类
-- public class StringToUserPropertyEditor extends PropertyEditorSupport implements PropertyEditor {
-- @Override public void setAsText(String text) throws IllegalArgumentException {
-- User user = new User();
-- user.setName(text);
-- this.setValue(user); }
-- }
-- StringToUserPropertyEditor propertyEditor = new StringToUserPropertyEditor(); propertyEditor.setAsText("1"); User value = (User) propertyEditor.getValue(); System.out.println(value);
-- 如何向Spring中注册PropertyEditor：
-- @Bean public CustomEditorConfigurer customEditorConfigurer() { CustomEditorConfigurer customEditorConfigurer = new CustomEditorConfigurer();
-- Map<Class<?>, Class<? extends PropertyEditor>> propertyEditorMap = new HashMap<>();
-- // 表示StringToUserPropertyEditor 可以将String转化成User 类型，在Spring 源码中，如果发现当前 对象是String，而需要的类型是User ，就会使用该PropertyEditor来做类型转化
-- propertyEditorMap.put(User.class, StringToUserPropertyEditor.class); customEditorConfigurer.setCustomEditors(propertyEditorMap); return customEditorConfigurer;
-- }
-- 假设现在有如下Bean:
-- @Component public class UserService {
-- @Value("xxx") private User user;
-- public void test() { System.out.println(user);
-- }
-- }
-- 那么test属性就能正常的完成属性赋值
-- ConversionService
-- Spring中提供的类型转化服务，它比PropertyEditor更强大
-- public class StringToUserConverter implements ConditionalGenericConverter {
-- @Override public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) { return sourceType.getType().equals(String.class) && targetType.getType().equals(User.class); }
-- @Override public Set<ConvertiblePair> getConvertibleTypes() { return Collections.singleton(new ConvertiblePair(String.class, User.class)); }
-- @Override public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) { User user = new User(); user.setName((String)source); return user; } }
-- DefaultConversionService conversionService = new DefaultConversionService(); conversionService.addConverter(new StringToUserConverter()); User value = conversionService.convert("1", User.class); System.out.println(value);
-- 如何向Spring中注册ConversionService：
-- @Bean public ConversionServiceFactoryBean conversionService() {
-- ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();
-- conversionServiceFactoryBean.setConverters(Collections.singleton(new StringToUserConverter()));
-- return conversionServiceFactoryBean;
-- }
-- TypeConverter TypeConverter
-- 整合了PropertyEditor和ConversionService的功能，是Spring内部用的
-- SimpleTypeConverter typeConverter = new SimpleTypeConverter(); typeConverter.registerCustomEditor(User.class, new StringToUserPropertyEditor()); //typeConverter.setConversionService(conversionService); User value = typeConverter.convertIfNecessary("1", User.class); System.out.println(value);
+	- 在Spring源码中，有可能需要把String转成其他类型，所以在Spring源码中提供了一些技术来更方便 的做对象的类型转化，关于类型转化的应用场景， 后续看源码的过程中会遇到很多。
+	- PropertyEditor
+		- 这其实是JDK中提供的类型转化工具类
+			- ```
+			  public class StringToUserPropertyEditor extends PropertyEditorSupport implements PropertyEditor {
+			  	@Override 
+			      public void setAsText(String text) throws IllegalArgumentException {
+			      	User user = new User();
+			          user.setName(text);
+			          this.setValue(user); 
+			      }
+			  }
+			  ```
+		- 使用
+			- ```
+			  StringToUserPropertyEditor propertyEditor = new StringToUserPropertyEditor(); 
+			  propertyEditor.setAsText("1"); 
+			  User value = (User) propertyEditor.getValue(); 
+			  System.out.println(value);
+			  ```
+		- 如何向Spring中注册PropertyEditor：
+			- ```
+			  @Bean 
+			  public CustomEditorConfigurer customEditorConfigurer() { 
+			  	CustomEditorConfigurer customEditorConfigurer = new CustomEditorConfigurer();
+			      Map<Class<?>, Class<? extends PropertyEditor>> propertyEditorMap = new HashMap<>();
+			      // 表示StringToUserPropertyEditor 可以将String转化成User 类型
+			      // 在Spring 源码中，如果发现当前 对象是String，而需要的类型是User
+			      // 就会使用该PropertyEditor来做类型转化
+			      propertyEditorMap.put(User.class, StringToUserPropertyEditor.class); 
+			      customEditorConfigurer.setCustomEditors(propertyEditorMap); 
+			      return customEditorConfigurer;
+			  }
+			  ```
+		- 假设现在有如下Bean:
+			- ```
+			  @Component 
+			  public class UserService {
+			  	@Value("xxx") 
+			      private User user;
+			      public void test() { 
+			      	System.out.println(user);
+			      }
+			  }
+			  ```
+			- 那么test属性就能正常的完成属性赋值
+	- ConversionService
+		- Spring中提供的类型转化服务，它比PropertyEditor更强大
+		- ```
+		  public class StringToUserConverter implements ConditionalGenericConverter {
+		  	@Override 
+		      public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
+		      	return sourceType.getType().equals(String.class) && targetType.getType().equals(User.class); 
+		      }
+		      @Override 
+		      public Set<ConvertiblePair> getConvertibleTypes() { 
+		      	return Collections.singleton(new ConvertiblePair(String.class, User.class)); 
+		      }
+		      @Override 
+		      public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) { 
+		      	User user = new User(); 
+		          user.setName((String)source); 
+		          return user; 
+		      } 
+		  }
+		  ```
+	- 使用
+		- ```
+		  DefaultConversionService conversionService = new DefaultConversionService(); 
+		  conversionService.addConverter(new StringToUserConverter()); 
+		  User value = conversionService.convert("1", User.class); 
+		  System.out.println(value);
+		  ```
+	- 如何向Spring中注册ConversionService：
+		- ```
+		  @Bean 
+		  public ConversionServiceFactoryBean conversionService() {
+		  	ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();
+		      conversionServiceFactoryBean.setConverters(Collections.singleton(new StringToUserConverter()));
+		      return conversionServiceFactoryBean;
+		  }
+		  ```
+	- TypeConverter TypeConverter
+		- 整合了PropertyEditor和ConversionService的功能，是Spring内部用的
+		- ```
+		  SimpleTypeConverter typeConverter = new SimpleTypeConverter(); 
+		  typeConverter.registerCustomEditor(User.class, new StringToUserPropertyEditor()); 
+		  typeConverter.setConversionService(conversionService); 
+		  User value = typeConverter.convertIfNecessary("1", User.class); 
+		  System.out.println(value);
+		  ```
+-
 - OrderComparator
-- OrderComparator是Spring所提供的一种比较器，可以用来根据@Order注解或实现Ordered接口 来执行值进行笔记，从而可以进行排序。
-- 比如：
-- public class A implements Ordered {
-- @Override public int getOrder() { return 3; }
-- @Override public String toString() { return this.getClass().getSimpleName(); }
-- }
-- public class B implements Ordered {
-- @Override public int getOrder() { return 2; }
-- @Override public String toString() { return this.getClass().getSimpleName(); }
-- }
-- public class Main {
-- public static void main(String[] args) { A a = new A(); // order=3
-- B b = new B(); // order=2
-- OrderComparator comparator = new OrderComparator(); System.out.println(comparator.compare(a, b)); // 1
-- List list = new ArrayList<>();
-- list.add(a); list.add(b);
-- // 按order 值升序排序 list.sort(comparator);
-- System.out.println(list);
-- }
-- // B，A
-- }
-- 另外，Spring中还提供了一个OrderComparator的子类： AnnotationAwareOrderComparator，它支持用@Order来指定order值。比如：
-- @Order(3) public class A {
-- @Override public String toString() { return this.getClass().getSimpleName(); }
-- }
-- @Order(2) public class B {
-- @Override public String toString() { return this.getClass().getSimpleName(); }
-- }
-- public class Main {
-- public static void main(String[] args) {
-- A a = new A(); // order=3
-- B b = new B(); // order=2
-- AnnotationAwareOrderComparator comparator = new AnnotationAwareOrderComparator(); System.out.println(comparator.compare(a, b)); // 1
-- List list = new ArrayList<>();
-- list.add(a); list.add(b); // 按order 值升序排序 list.sort(comparator);
-- }
-- System.out.println(list); // B，A
-- }
+	- OrderComparator是Spring所提供的一种比较器，可以用来根据@Order注解或实现Ordered接口 来执行值进行笔记，从而可以进行排序。
+	- 比如：
+	- ```
+	  public class A implements Ordered {
+	  	@Override 
+	      public int getOrder() { return 3; }
+	      @Override 
+	      public String toString() { return this.getClass().getSimpleName(); }
+	  }
+	  ```
+	- ```
+	  public class B implements Ordered {
+	  	@Override 
+	      public int getOrder() { return 2; }
+	      @Override public String toString() { return this.getClass().getSimpleName(); }
+	  }
+	  ```
+	- ```
+	  public class Main {
+	  	public static void main(String[] args) { 
+	      	A a = new A(); // order=3
+	      	B b = new B(); // order=2
+	          OrderComparator comparator = new OrderComparator(); 
+	          System.out.println(comparator.compare(a, b)); // 1
+	          List list = new ArrayList<>();
+	          list.add(a); 
+	          list.add(b);
+	          //按order 值升序排序 
+	          list.sort(comparator);
+	          System.out.println(list);
+	      }
+	      // B，A
+	  }
+	  ```
+	- 另外，Spring中还提供了一个OrderComparator的子类： AnnotationAwareOrderComparator，它支持用@Order来指定order值。比如：
+		- ```
+		  @Order(3) 
+		  public class A {
+		  	@Override 
+		      public String toString() { return this.getClass().getSimpleName(); }
+		  }
+		  @Order(2) 
+		  public class B {
+		  	@Override 
+		      public String toString() { return this.getClass().getSimpleName(); }
+		  }
+		  public class Main {
+		  	public static void main(String[] args) {
+		      	A a = new A(); // order=3
+		          B b = new B(); // order=2
+		          AnnotationAwareOrderComparator comparator = new AnnotationAwareOrderComparator(); 
+		          System.out.println(comparator.compare(a, b)); // 1
+		          List list = new ArrayList<>();
+		          list.add(a); 
+		          list.add(b); 
+		          // 按order 值升序排序 
+		          list.sort(comparator);
+		          System.out.println(list); // B，A
+		      }
+		  }   
+		  ```
+		-
 - BeanPostProcessor
-- BeanPostProcess表示Bena的后置处理器，我们可以定义一个或多个BeanPostProcessor，比如通 过一下代码定义一个BeanPostProcessor：
-- @Component public class ZhouyuBeanPostProcessor implements BeanPostProcessor {
-- @Override public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException { if ("userService".equals(beanName)) { System.out.println("初始化前"); }
-- return bean;
-- }
-- @Override public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException { if ("userService".equals(beanName)) { System.out.println("初始化后"); }
-- return bean;
-- }
-- }
-- 一个BeanPostProcessor可以在任意一个Bean的初始化之前以及初始化之后去额外的做一些用户自 定义的逻辑，当然，我们可以通过判断beanName来进行针对性处理（针对某个Bean，或某部分 Bean）。
-- 我们可以通过定义BeanPostProcessor来干涉Spring创建Bean的过程。
+	- BeanPostProcess表示Bena的后置处理器，我们可以定义一个或多个BeanPostProcessor，比如通 过一下代码定义一个BeanPostProcessor：
+	- ```
+	  @Component 
+	  public class ZhouyuBeanPostProcessor implements BeanPostProcessor {
+	  	@Override 
+	      public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException { 
+	      	if ("userService".equals(beanName)) { System.out.println("初始化前"); }
+	          return bean;
+	      }
+	      @Override 
+	      public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException { 
+	      	if ("userService".equals(beanName)) { System.out.println("初始化后"); }
+	          return bean;
+	      }
+	  }
+	  ```
+	- 一个BeanPostProcessor可以在任意一个Bean的初始化之前以及初始化之后去额外的做一些用户自 定义的逻辑，当然，我们可以通过判断beanName来进行针对性处理（针对某个Bean，或某部分 Bean）。
+	- 我们可以通过定义BeanPostProcessor来干涉Spring创建Bean的过程。
+-
 - BeanFactoryPostProcessor
-- BeanFactoryPostProcessor表示Bean工厂的后置处理器，其实和BeanPostProcessor类似， BeanPostProcessor是干涉Bean的创建过程，BeanFactoryPostProcessor是干涉BeanFactory的创 建过程。比如，我们可以这样定义一个BeanFactoryPostProcessor： @Component public class ZhouyuBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
-- @Override public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException { System.out.println("加工beanFactory"); } }
-- 我们可以在postProcessBeanFactory()方法中对BeanFactory进行加工。
+	- BeanFactoryPostProcessor表示Bean工厂的后置处理器，其实和BeanPostProcessor类似， BeanPostProcessor是干涉Bean的创建过程，BeanFactoryPostProcessor是干涉BeanFactory的创 建过程。
+	- 比如，我们可以这样定义一个BeanFactoryPostProcessor：
+	- ```
+	  @Component 
+	  public class ZhouyuBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+	  	@Override 
+	      public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException { 
+	      	System.out.println("加工beanFactory"); 
+	      } 
+	  }
+	  ```
+	- 我们可以在postProcessBeanFactory()方法中对BeanFactory进行加工。
+-
 - FactoryBean
-- 上面提到，我们可以通过BeanPostPorcessor来干涉Spring创建Bean的过程，但是如果我们想一个 Bean完完全全由我们来创造，也是可以的，比如通过FactoryBean：
-- @Component public class ZhouyuFactoryBean implements FactoryBean {
-- @Override public Object getObject() throws Exception { UserService userService = new UserService();
-- return userService;
-- }
-- @Override public Class<?> getObjectType() { return UserService.class; }
-- }
-- 通过上面这段代码，我们自己创造了一个UserService对象，并且它将成为Bean。但是通过这种方式 创造出来的UserService的Bean，只会经过初始化后，其他Spring的生命周期步骤是不会经过的，比 如依赖注入。
-- 有同学可能会想到，通过@Bean也可以自己生成一个对象作为Bean，那么和FactoryBean的区别是 什么呢？其实在很多场景下他俩是可以替换的，但是站在原理层面来说的，区别很明显，@Bean定 义的Bean是会经过完整的Bean生命周期的。
+	- 上面提到，我们可以通过BeanPostPorcessor来干涉Spring创建Bean的过程，但是如果我们想一个 Bean完完全全由我们来创造，也是可以的，比如通过FactoryBean：
+	- ```
+	  @Component 
+	  public class ZhouyuFactoryBean implements FactoryBean {
+	  	@Override 
+	      public Object getObject() throws Exception { 
+	      	UserService userService = new UserService();
+	          return userService;
+	      }
+	      @Override 
+	      public Class<?> getObjectType() { 
+	      	return UserService.class; 
+	      }
+	  }
+	  ```
+	- 通过上面这段代码，我们自己创造了一个UserService对象，并且它将成为Bean。但是通过这种方式 创造出来的UserService的Bean，只会经过初始化后，其他Spring的生命周期步骤是不会经过的，比 如依赖注入。
+	- 有同学可能会想到，通过@Bean也可以自己生成一个对象作为Bean，那么和FactoryBean的区别是 什么呢？其实在很多场景下他俩是可以替换的，但是站在原理层面来说的，区别很明显，@Bean定 义的Bean是会经过完整的Bean生命周期的。
+-
 - ExcludeFilter和IncludeFilter
-- 这两个Filter是Spring扫描过程中用来过滤的。ExcludeFilter表示排除过滤器，IncludeFilter表示包 含过滤器。
-- 比如以下配置，表示扫描com.zhouyu这个包下面的所有类，但是排除UserService类，也就是就算 它上面有@Component注解也不会成为Bean。 @ComponentScan(value = "com.zhouyu",
-- excludeFilters = {@ComponentScan.Filter(
-- type = FilterType.ASSIGNABLE_TYPE,
-- classes = UserService.class)}.)
-- public class AppConfig { }
-- 再比如以下配置，就算UserService类上没有@Component注解，它也会被扫描成为一个Bean。
-- @ComponentScan(value = "com.zhouyu",
-- includeFilters = {@ComponentScan.Filter(
-- type = FilterType.ASSIGNABLE_TYPE, classes = UserService.class)}) public class AppConfig { }
-- FilterType分为：
-- 1. ANNOTATION：表示是否包含某个注解
-- 2. ASSIGNABLE_TYPE：表示是否是某个类
-- 3. ASPECTJ：表示否是符合某个Aspectj表达式
-- 4. REGEX：表示是否符合某个正则表达式
-- 5. CUSTOM：自定义
-- 在Spring的扫描逻辑中，默认会添加一个AnnotationTypeFilter给includeFilters，表示默认情况下 Spring扫描过程中会认为类上有@Component注解的就是Bean。
+	- 这两个Filter是Spring扫描过程中用来过滤的。ExcludeFilter表示排除过滤器，IncludeFilter表示包含过滤器。
+	- 比如以下配置，表示扫描com.zhouyu这个包下面的所有类，但是排除UserService类，也就是就算 它上面有@Component注解也不会成为Bean。
+	- ```
+	  @ComponentScan(value = "com.zhouyu",excludeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,classes = UserService.class)}.)
+	  public class AppConfig { }
+	  ```
+	- 再比如以下配置，就算UserService类上没有@Component注解，它也会被扫描成为一个Bean。
+	- ```
+	  @ComponentScan(value = "com.zhouyu",includeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = UserService.class)}) 
+	  public class AppConfig { }
+	  ```
+	- FilterType分为：
+		- 1. ANNOTATION：表示是否包含某个注解
+		- 2. ASSIGNABLE_TYPE：表示是否是某个类
+		- 3. ASPECTJ：表示否是符合某个Aspectj表达式
+		- 4. REGEX：表示是否符合某个正则表达式
+		- 5. CUSTOM：自定义
+		- 在Spring的扫描逻辑中，默认会添加一个AnnotationTypeFilter给includeFilters，表示默认情况下 Spring扫描过程中会认为类上有@Component注解的就是Bean。
+-
 - MetadataReader、ClassMetadata、 AnnotationMetadata
-- 在Spring中需要去解析类的信息，比如类名、类中的方法、类上的注解，这些都可以称之为类的元数 据，所以Spring中对类的元数据做了抽象，并提供了一些工具类。
-- MetadataReader表示类的元数据读取器，默认实现类为SimpleMetadataReader。比如：
-- public class Test { public static void main(String[] args) throws IOException { SimpleMetadataReaderFactory simpleMetadataReaderFactory = new SimpleMetadataReaderFactory();
-- // 构造一个MetadataReader MetadataReader metadataReader = simpleMetadataReaderFactory.getMetadataReader("com.zhouyu.service.UserService");
-- // 得到一个ClassMetadata，并获取了类名 ClassMetadata classMetadata = metadataReader.getClassMetadata();
-- System.out.println(classMetadata.getClassName());
-- // 获取一个AnnotationMetadata，并获取类上的注解信息 AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();
-- for (String annotationType : annotationMetadata.getAnnotationTypes()) { System.out.println(annotationType); }
-- }
-- }
-- 需要注意的是，SimpleMetadataReader去解析类时，使用的ASM技术。
-- 为什么要使用ASM技术，Spring启动的时候需要去扫描，如果指定的包路径比较宽泛，那么扫描的 类是非常多的，那如果在Spring启动时就把这些类全部加载进JVM了，这样不太好，所以使用了 ASM技术。
+	- 在Spring中需要去解析类的信息，比如类名、类中的方法、类上的注解，这些都可以称之为类的元数据，所以Spring中对类的元数据做了抽象，并提供了一些工具类。
+		- MetadataReader表示类的元数据读取器，默认实现类为SimpleMetadataReader。比如：
+		- ```
+		  public class Test { public static void main(String[] args) throws IOException { 
+		  	SimpleMetadataReaderFactory simpleMetadataReaderFactory = new SimpleMetadataReaderFactory();
+		      // 构造一个MetadataReader 
+		      MetadataReader metadataReader = simpleMetadataReaderFactory.getMetadataReader("com.zhouyu.service.UserService");
+		      // 得到一个ClassMetadata，并获取了类名 
+		      ClassMetadata classMetadata = metadataReader.getClassMetadata();
+		      System.out.println(classMetadata.getClassName());
+		      // 获取一个AnnotationMetadata，并获取类上的注解信息 
+		      AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();
+		      for (String annotationType : annotationMetadata.getAnnotationTypes()) { 
+		      	System.out.println(annotationType); 
+		      }
+		  }
+		  ```
+	- 需要注意的是，SimpleMetadataReader去解析类时，使用的ASM技术。
+		- 为什么要使用ASM技术，Spring启动的时候需要去扫描，如果指定的包路径比较宽泛，那么扫描的 类是非常多的，那如果在Spring启动时就把这些类全部加载进JVM了，这样不太好，所以使用了 ASM技术。
