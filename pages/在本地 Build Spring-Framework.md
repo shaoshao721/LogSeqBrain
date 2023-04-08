@@ -16,4 +16,4 @@
 		- ``` bash
 		  ./gradlew publishToMavenLocal -x api -x javadoc -x dokkaHtmlMultiModule -x asciidoctor -x asciidoctorPdf -x distZip
 		  ```
-	-
+- 中间没有任何异常出现，直接通过编译
