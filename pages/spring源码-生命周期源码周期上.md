@@ -12,6 +12,7 @@ tags:: spring
 - 关于Spring启动流程，后续会单独的课详细讲，这里先讲一下Spring扫描的底层实现：
 	- Spring扫描底层流程：https://www.processon.com/view/link/61370ee60e3e7412ecd95d43
 	- ![image.png](../assets/image_1681026667686_0.png)
+	- ![image.png](../assets/image_1681026678545_0.png)
 	-
 - 1. 首先，通过ResourcePatternResolver获得指定包路径下的所有 此文件包装成了Resource对象）
 - 2. 遍历每个Resource对象
