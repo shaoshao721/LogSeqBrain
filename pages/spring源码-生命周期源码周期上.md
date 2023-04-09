@@ -7,12 +7,10 @@ tags:: spring
 	- 附带资料JFR介绍：https://zhuanlan.zhihu.com/p/122247741
 - Bean的生成过程
 	- 1. 生成BeanDefinition
-- Spring启动的时候会进行扫描，会先调用
-- org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider#scanCandid
-- ateComponents(String basePackage)
-- 扫描某个包路径，并得到BeanDefinition的Set集合。
+		- Spring启动的时候会进行扫描，会先调用org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider#scanCandidateComponents(String basePackage)
+		- 扫描某个包路径，并得到BeanDefinition的Set集合。
 - 关于Spring启动流程，后续会单独的课详细讲，这里先讲一下Spring扫描的底层实现：
-- Spring扫描底层流程：https://www.processon.com/view/link/61370ee60e3e7412ecd95d43
+	- Spring扫描底层流程：https://www.processon.com/view/link/61370ee60e3e7412ecd95d43
 - 1. 首先，通过ResourcePatternResolver获得指定包路径下的所有 此文件包装成了Resource对象）
 - 2. 遍历每个Resource对象
 - .class
