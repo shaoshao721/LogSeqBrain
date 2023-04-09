@@ -13,18 +13,14 @@ tags:: spring
 	- Spring扫描底层流程：https://www.processon.com/view/link/61370ee60e3e7412ecd95d43
 	- ![image.png](../assets/image_1681026667686_0.png)
 	- ![image.png](../assets/image_1681026678545_0.png)
-	-
-- 1. 首先，通过ResourcePatternResolver获得指定包路径下的所有 此文件包装成了Resource对象）
-- 2. 遍历每个Resource对象
-- .class
-- 文件（Spring源码中将
-- 3. 利用MetadataReaderFactory解析Resource对象得到MetadataReader（在Spring源码中
-- MetadataReaderFactory具体的实现类为CachingMetadataReaderFactory， MetadataReader的具体实现类为SimpleMetadataReader）
-- 4. 利用MetadataReader进行excludeFilters和includeFilters，以及条件注解@Conditional的筛选 （条件注解并不能理解：某个类上是否存在@Conditional注解，如果存在则调用注解中所指定 的类的match方法进行匹配，匹配成功则通过筛选，匹配失败则pass掉。）
-- 5. 筛选通过后，基于metadataReader生成ScannedGenericBeanDefinition
-- 6. 再基于metadataReader判断是不是对应的类是不是接口或抽象类
-- 7. 如果筛选通过，那么就表示扫描到了一个Bean，将ScannedGenericBeanDefinition加入结果集
-- MetadataReader表示类的元数据读取器，主要包含了一个AnnotationMetadata，功能有
+	- ![image.png](../assets/image_1681026691420_0.png)
+		- 1. 首先，通过ResourcePatternResolver获得指定包路径下的所有 此文件包装成了Resource对象）
+		  2. 遍历每个Resource对象.class文件（Spring源码中将利用MetadataReaderFactory解析Resource对象得到MetadataReader（在Spring源码中MetadataReaderFactory具体的实现类为CachingMetadataReaderFactory， MetadataReader的具体实现类为SimpleMetadataReader）
+		  3. 利用MetadataReader进行excludeFilters和includeFilters，以及条件注解@Conditional的筛选 （条件注解并不能理解：某个类上是否存在@Conditional注解，如果存在则调用注解中所指定 的类的match方法进行匹配，匹配成功则通过筛选，匹配失败则pass掉。）
+		  4. 筛选通过后，基于metadataReader生成ScannedGenericBeanDefinition
+		  5. 再基于metadataReader判断是不是对应的类是不是接口或抽象类
+		  6. 如果筛选通过，那么就表示扫描到了一个Bean，将ScannedGenericBeanDefinition加入结果集
+		- MetadataReader表示类的元数据读取器，主要包含了一个AnnotationMetadata，功能有
 - 1. 获取类的名字、
 - 2. 获取父类的名字
 - 3. 获取所实现的所有接口名
