@@ -3,7 +3,6 @@ tags:: redis，书籍
 - redis设计与实现
 - redis 使用手册
 - redis 开发与运维
-- [¬]()
 -
 - 需要了解的点
 	- redis系统架构
